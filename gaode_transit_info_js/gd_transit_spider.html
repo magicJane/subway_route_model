@@ -1,0 +1,116 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />	
+	<script type="text/javascript"
+            src="http://webapi.amap.com/maps?v=1.3&key=02e3de6bd711c45f58321a702dd24468&plugin=AMap.LineSearch"></script>
+    
+    
+	<title>高德公交线路查询</title>
+    
+</head>
+
+<body>
+    <div id="r_status"></div>
+    <script src="FileSaver.js"></script>
+    <script type="text/javascript"> 
+        var city = '深圳'
+        var num_key = 1200
+        var additional_keywords = ['旅游', '观光', '接驳线', '假日', '联通', '机场快线'] // 深圳2017
+
+        var outputStopFile = "transit_stop.txt"
+        var outputShapeFile = "transit_shape.txt"
+        
+        var number_keywords = new Array(num_key)
+        var saved_trip_names = new Set()
+        for (var i = 0; i < number_keywords.length; i++) {
+            number_keywords[i] = (i + 1).toString();
+        };
+        var keywords = number_keywords.concat(additional_keywords)
+
+        var outputStop = ""
+        var outputShape = ""
+                
+        var linesearch = new AMap.LineSearch({
+            pageIndex: 1,
+            city: city,
+            pageSize: 50,
+            extensions: 'all'
+        });
+        var icount = 0
+        for (ix in keywords){
+            linesearch.search(keywords[ix], function(status, result) {  
+                icount += 1       
+                document.getElementById("r_status").innerHTML = icount + "/" + keywords.length;       
+                if (status == 'complete' && result.info == 'OK') {
+                    lineSearch_Callback(result);                    
+                } 
+
+                sleep(500)
+            });
+        }
+        
+        function lineSearch_Callback(data) {    
+            var lineArr = data.lineInfo;
+            var lineNum = data.lineInfo.length;
+            
+            if (lineNum != 0) { 
+                var line_stations_info = [];
+                var line_path = []
+                for (var iline = 0; iline < lineNum; iline++) {
+                    var stops = lineArr[iline].via_stops;
+                    
+                    var flds = lineArr[iline].name.split('(');
+                    var short_name = flds[0];
+
+                    if (!saved_trip_names.has(lineArr[iline].name)){                    
+                        var stopNum = stops.length;                 
+                        
+                        for (var istop = 0; istop < stopNum; istop++) { 
+                            var curr_stop = stops[istop]
+                            line_stations_info.push(short_name + ',' + lineArr[iline].name + ',' + 
+                                    (istop+1) + ',' + curr_stop.name  + ',' + //station 有 id属性，但同名的站点id相同，未分方向，所以没什么用
+                                    curr_stop.location.lng  + ',' + curr_stop.location.lat);
+                        }
+                        
+                        var pathArr = lineArr[iline].path;
+                        var pathNum = pathArr.length;
+                        
+                        var loc_line = [];
+                        for(var icoord=0; icoord<pathNum; icoord++){
+                        var loc = pathArr[icoord]
+                        loc_line.push(loc.lng + '_' + loc.lat)
+                        }
+                        line_path.push(short_name + ',' + lineArr[iline].name + ',' + 
+                                        lineArr[iline].stime  + ',' + lineArr[iline].etime  + ',' +  
+                                        lineArr[iline].basic_price + ',' + lineArr[iline].total_price  + ',' +                                  
+                                        lineArr[iline].company + ',' + loc_line.join("|"));
+                        
+                        saved_trip_names.add(lineArr[iline].name)
+                    }
+                }
+                
+                
+                outputStop += line_stations_info.join("\n") + "\n"
+                outputShape += line_path.join("\n")  + "\n"
+
+                if (icount == keywords.length){
+                    var blobStop = new Blob([outputStop], {type: "text/plain;charset=utf-8"});
+                    saveAs(blobStop, outputStopFile);
+
+                    var blobShape = new Blob([outputShape], {type: "text/plain;charset=utf-8"});
+                    saveAs(blobShape, outputShapeFile);
+
+                    document.getElementById("r_status").innerHTML = "complete.";
+                }
+            }
+        }
+
+        function sleep(ms) {
+        var unixtime_ms = new Date().getTime();
+        while(new Date().getTime() < unixtime_ms + ms) {}
+    }  
+    </script>    
+    
+</body>
+</html>    

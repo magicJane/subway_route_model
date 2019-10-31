@@ -5,9 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
     <title>按起终站点名称获取轨道交通出行路径</title>
-    <style>
-        #container{width:80%; height:80%;}
-    </style>
+    <style></style>
     <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.0&key=02e3de6bd711c45f58321a702dd24468&plugin=AMap.Transfer"></script>
 </head>
 
@@ -62,11 +60,11 @@
                                 }
                             }
 
-                            output += result.start.name + "," + result.end.name + "," + route_id + "," + plan.time.toFixed(1) + "," +
+                            output += icount + "," + result.start.name + "," + result.end.name + "," + route_id + "," + plan.time.toFixed(1) + "," +
                                 plan.cost.toFixed(1) + "," + plan.distance.toFixed(1) + "," + plan.walking_distance.toFixed(1) + "," +
-                                lines.join("|") + "," + stops.join("|") + "\n"; 
+                                lines.join("|") + "," + stops.join("|") + "\n";    // 输出结果格式
 
-                            sleep(500);
+                            sleep(500);  
 
                         }
                         route_id = route_id + 1
@@ -78,7 +76,7 @@
         icount = icount + 1
 
         if (icount < totalCount){
-            if (icount % 1000 == 0){
+            if (icount % 1000 == 0){   // 每1000个站点对保存为1个文件
                 var blob = new Blob([output], {type: "text/plain;charset=utf-8"});
                 saveAs(blob, outputFileName);
                 output = "";
