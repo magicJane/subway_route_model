@@ -75,6 +75,9 @@
             
         icount = icount + 1
 
+        document.getElementById("r_status").innerHTML = icount + "/" + totalCount;
+
+
         if (icount < totalCount){
             if (icount % 1000 == 0){   // 每1000个站点对保存为1个文件
                 var blob = new Blob([output], {type: "text/plain;charset=utf-8"});
@@ -90,10 +93,7 @@
             var blob = new Blob([output], {type: "text/plain;charset=utf-8"});
             saveAs(blob, outputFileName);
             return ;
-        }                
-
-        document.getElementById("r_status").innerHTML = icount + "/" + totalCount;
-    
+        }                  
             
             // alert(output);
             // document.getElementById("r_result").innerHTML = output;
